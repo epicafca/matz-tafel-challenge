@@ -18,7 +18,7 @@
       margin: 0 auto;
       padding: 20px;
       background: #fff;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       border-radius: 10px;
     }
     .question { font-size: 2em; margin: 20px; }
@@ -31,12 +31,6 @@
       font-size: 1em;
       padding: 10px 20px;
       margin-top: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #ddd;
     }
     .scoreboard, .highscores {
       margin-top: 30px;
@@ -53,17 +47,7 @@
     .gold { color: gold; font-weight: bold; }
     .silver { color: silver; font-weight: bold; }
     .bronze { color: #cd7f32; font-weight: bold; }
-    .emoji {
-      font-size: 3em;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-    .show { opacity: 1; }
-    .rules-overlay {
+    .overlay {
       position: fixed;
       top: 0;
       left: 0;
@@ -74,38 +58,32 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      flex-direction: column;
       z-index: 1000;
+      flex-direction: column;
+      padding: 20px;
     }
-    .rules-overlay h2 {
-      margin-bottom: 20px;
-    }
-    .rules-overlay select {
+    .overlay select, .overlay button {
       font-size: 1.2em;
       padding: 10px;
-      margin-bottom: 20px;
+      margin: 10px;
     }
-    .rules-overlay button {
-      font-size: 1.2em;
-      padding: 10px 20px;
-      background: #28a745;
-      color: #fff;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .rules-overlay button:hover {
-      background: #218838;
+    .emoji {
+      font-size: 5em;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 999;
+      display: none;
     }
   </style>
 </head>
 <body>
+  <h1>MATZ Grote Tafel Challenge!</h1>
   <div class="container">
-    <h1>MATZ Grote Tafel Challenge!</h1>
     <div class="question" id="question">Klik op Start om te beginnen!</div>
     <input type="number" id="answer" disabled />
     <button onclick="submitAnswer()">Beantwoord</button>
-    <button onclick="startGame()">Start</button>
     <div class="timer" id="timer"></div>
     <div class="scoreboard">
       <p>Score: <span id="score">0</span></p>
@@ -115,13 +93,13 @@
       <h2>🏆 High Scores</h2>
       <ol id="highscoreList"></ol>
     </div>
-    <div class="emoji" id="emoji"></div>
   </div>
 
-  <div class="rules-overlay" id="rulesOverlay">
-    <h2>Spelregels</h2>
-    <p>Welkom bij de MATZ Grote Tafel Challenge! Kies een tafel om te oefenen:</p>
+  <div class="overlay" id="overlay">
+    <h2>Welkom bij de MATZ Grote Tafel Challenge!</h2>
+    <p>🎯 Kies een tafel om te oefenen of kies voor willekeurige vragen:</p>
     <select id="tableSelect">
+      <option value="random">Willekeurige Vragen</option>
       <option value="1">Tafel van 1</option>
       <option value="2">Tafel van 2</option>
       <option value="3">Tafel van 3</option>
@@ -132,14 +110,21 @@
       <option value="8">Tafel van 8</option>
       <option value="9">Tafel van 9</option>
       <option value="10">Tafel van 10</option>
-      <option value="random">Willekeurige Vragen</option>
     </select>
-    <button onclick="startGame()">Start Spel</button>
+    <button onclick="startGame()">Start</button>
+    <h3>Spelregels:</h3>
+    <p>✅ Beantwoord zoveel mogelijk tafel-van-8-vragen correct.</p>
+    <p>✅ Elk goed antwoord = 5 punten.</p>
+    <p>❌ Na 3 foute antwoorden = game over.</p>
+    <p>⏱️ Eerste 5 vragen: 15 seconden per vraag.</p>
+    <p>⏱️ Daarna: elke vraag 1 seconde minder tot een minimum van 5 seconden.</p>
   </div>
+
+  <div class="emoji" id="emoji">😄</div>
 
   <script>
     let score = 0, mistakes = 0, questionCount = 0, timeLimit = 15, timer;
-    let currentAnswer = 0, selectedTable = 8;
+    let currentAnswer = 0, selectedTable = 'random';
 
     const questionEl = document.getElementById('question');
     const answerEl = document.getElementById('answer');
@@ -147,13 +132,11 @@
     const mistakesEl = document.getElementById('mistakes');
     const timerEl = document.getElementById('timer');
     const highscoreList = document.getElementById('highscoreList');
+    const overlay = document.getElementById('overlay');
     const emojiEl = document.getElementById('emoji');
-    const rulesOverlay = document.getElementById('rulesOverlay');
-    const tableSelect = document.getElementById('tableSelect');
 
     function startGame() {
-      selectedTable = tableSelect.value;
-      rulesOverlay.style.display = 'none';
+      selectedTable = document.getElementById('tableSelect').value;
       score = 0;
       mistakes = 0;
       questionCount = 0;
@@ -163,6 +146,8 @@
       answerEl.disabled = false;
       answerEl.value = '';
       answerEl.focus();
+      overlay.style.display = 'none';
+      renderHighScores();
       nextQuestion();
     }
 
@@ -170,11 +155,15 @@
       clearInterval(timer);
       let num;
       if (selectedTable === 'random') {
-        selectedTable = Math.floor(Math.random() * 10) + 1;
+        const table = Math.floor(Math.random() * 10) + 1;
+        num = Math.floor(Math.random() * 11);
+        currentAnswer = table * num;
+        questionEl.textContent = `Wat is ${table} × ${num}?`;
+      } else {
+        num = Math.floor(Math.random() * 11);
+        currentAnswer = selectedTable * num;
+        questionEl.textContent = `Wat is ${selectedTable} × ${num}?`;
       }
-      num = Math.floor(Math.random() * 11);
-      currentAnswer = selectedTable * num;
-      questionEl.textContent = `Wat is ${selectedTable} × ${num}?`;
       answerEl.value = '';
       answerEl.focus();
       questionCount++;
@@ -203,10 +192,6 @@
         score += 5;
         scoreEl.textContent = score;
         showEmoji('😄');
-        document.body.style.backgroundColor = 'lightgreen';
-        setTimeout(() => {
-          document.body.style.backgroundColor = '';
-        }, 500);
         nextQuestion();
       } else {
         handleWrong();
@@ -217,10 +202,6 @@
       mistakes++;
       mistakesEl.textContent = mistakes;
       showEmoji('😢');
-      document.body.style.backgroundColor = 'lightcoral';
-      setTimeout(() => {
-        document.body.style.backgroundColor = '';
-      }, 500);
       if (mistakes >= 3) {
         gameOver();
       } else {
@@ -233,6 +214,7 @@
       questionEl.textContent = `Game Over! Je score is ${score}`;
       timerEl.textContent = '';
       checkHighScore();
+      overlay.style.display = 'flex';
     }
 
     function checkHighScore() {
@@ -257,16 +239,16 @@
         else if (index === 1) medal = 'silver';
         else if (index === 2) medal = 'bronze';
         li.className = medal;
-        li.textContent = `${entry.name} – ${entry.score} punten (${entry.correct} goed, Tafel van ${entry.table})`;
+        li.textContent = `${entry.name} – ${entry.score} punten (${entry.correct} goed, Tafel: ${entry.table})`;
         highscoreList.appendChild(li);
       });
     }
 
     function showEmoji(emoji) {
       emojiEl.textContent = emoji;
-      emojiEl.classList.add('show');
+      emojiEl.style.display = 'block';
       setTimeout(() => {
-        emojiEl.classList.remove('show');
+        emojiEl.style.display = 'none';
       }, 1000);
     }
 
