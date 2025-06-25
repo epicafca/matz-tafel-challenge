@@ -4,10 +4,12 @@ self.addEventListener('install', (event) => {
     caches.open('v1').then((cache) => {
       return cache.addAll([
         '/',
-        '/tafel-van-8.html',
+        '/index.html',
         '/manifest.json',
+        '/service-worker.js',
         '/icon-192x192.png',
-        '/icon-512x512.png'
+        '/icon-512x512.png',
+        '/highscores.json'
       ]);
     })
   );
