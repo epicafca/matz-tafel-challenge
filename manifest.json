@@ -1,8 +1,7 @@
-
 {
   "name": "MATZ Grote Tafel Challenge",
   "short_name": "Tafel Challenge",
-  "start_url": "tafel-van-8.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f0f8ff",
   "theme_color": "#333",
